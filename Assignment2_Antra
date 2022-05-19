@@ -1,0 +1,193 @@
+--Assignment 2
+--Lucia Fuentes
+use AdventureWorks2019
+GO
+
+--1) Query that lists the country and province names from person. CountryRegion and person. StateProvince tables. Join them and produce a result set similar to the following. 
+SELECT s.Name AS Province, dt.Country AS Country
+FROM Person.StateProvince s LEFT JOIN
+(SELECT c.Name AS Country, c.CountryRegionCode
+FROM Person.CountryRegion c) dt ON s.CountryRegionCode = dt.CountryRegionCode
+
+--2) Write a query that lists the country and province names from person. CountryRegion and person. StateProvince tables and list the countries filter them by Germany and Canada. Join them and produce a result set similar to the following.
+SELECT s.Name AS Province, dt.Country AS Country
+FROM Person.StateProvince s LEFT JOIN
+(SELECT c.Name AS Country, c.CountryRegionCode
+FROM Person.CountryRegion c) dt ON s.CountryRegionCode = dt.CountryRegionCode
+WHERE dt.Country IN ('Germany', 'Canada')
+
+use Northwind
+GO
+
+--3) List all Products that has been sold at least once in last 25 years.
+SELECT DISTINCT p.ProductName
+FROM Products p LEFT JOIN
+(SELECT od.OrderID, od.ProductID
+FROM [Order Details] od LEFT JOIN
+(SELECT o.OrderID
+FROM Orders o  
+WHERE o.OrderDate BETWEEN '1997-01-01T00:00:00.00' AND '1998-05-06T00:00:00.00') dt ON od.OrderID = dt.OrderID) pt ON p.ProductID = pt.ProductID
+
+--4. List top 5 locations (Zip Code) where the products sold most in last 25 years.
+SELECT DISTINCT TOP 5 o.ShipPostalCode
+FROM Orders o  
+WHERE o.OrderDate BETWEEN '1997-01-01T00:00:00.00' AND '1998-05-06T00:00:00.00'
+
+--5. List all city names and number of customers in that city.   
+SELECT o.ShipCity AS 'City Names', COUNT(*) AS 'Number of Customers'
+FROM
+  Orders o
+GROUP BY
+  o.ShipCity
+
+--6. List city names which have more than 2 customers, and number of customers in that city
+SELECT dt.[City Names], dt.[Number of Customers]
+FROM (SELECT o.ShipCity AS 'City Names', COUNT(*) AS 'Number of Customers'
+FROM
+  Orders o
+GROUP BY
+  o.ShipCity) dt
+WHERE dt.[Number of Customers] >= 2
+
+--7. Display the names of all customers  along with the  count of products they bought
+SELECT c.ContactName, SUM(pb.NumOfProducts)
+FROM Customers c LEFT JOIN
+(SELECT o.CustomerID, dt.NumofProducts
+FROM Orders o LEFT JOIN
+(SELECT od.OrderID, COUNT(od.Quantity) AS NumOfProducts 
+FROM [Order Details] od 
+GROUP BY od.OrderID) dt ON o.OrderID = dt.OrderID) pb ON c.CustomerID = pb.CustomerID
+GROUP BY c.ContactName
+
+--8. Display the customer ids who bought more than 100 Products with count of products.
+SELECT tb.CustomerID, tb.totalNum
+FROM Customers c LEFT JOIN
+(SELECT c.CustomerID, SUM(pb.NumOfProducts) AS totalNum
+FROM Customers c LEFT JOIN
+(SELECT o.CustomerID, dt.NumofProducts
+FROM Orders o LEFT JOIN
+(SELECT od.OrderID, COUNT(od.Quantity) AS NumOfProducts
+FROM [Order Details] od 
+GROUP BY od.OrderID) dt ON o.OrderID = dt.OrderID) pb ON c.CustomerID = pb.CustomerID
+GROUP BY c.CustomerID) tb ON c.CustomerID = tb.CustomerID
+WHERE totalNum >= 100
+GROUP BY tb.CustomerID, tb.totalNum
+
+--9. List all of the possible ways that suppliers can ship their products. Display the results as below
+SELECT 
+    DISTINCT
+    sup.CompanyName AS 'Suppliers',
+    ship.CompanyName AS 'Shippers'
+FROM 
+    Suppliers sup,
+    Shippers ship
+
+--10. Display the products order each day. Show Order date and Product Name.
+SELECT p.ProductName, pt.OrderDate
+FROM Products p LEFT JOIN
+(SELECT od.OrderID, ot.OrderDate, od.ProductID
+FROM [Order Details] od LEFT JOIN
+(SELECT o.OrderID, o.OrderDate
+FROM Orders o) ot ON od.OrderID = ot.OrderID) pt ON p.ProductID = pt.ProductID
+GROUP BY pt.OrderDate, p.ProductName
+
+--11. Displays pairs of employees who have the same job title.
+SELECT e1.FirstName, e2.FirstName
+FROM Employees e1, Employees e2
+WHERE e1.Title = e2.Title
+AND e1.FirstName <> e2.FirstName
+
+--12. Display all the Managers who have more than 2 employees reporting to them.
+WITH empHierachyCte
+AS
+(
+SELECT EmployeeID, FirstName, ReportsTo, 1 AS lvl
+FROM Employees 
+WHERE ReportsTo is null
+UNION ALL
+SELECT e.EmployeeID, e.FirstName, e.ReportsTo, cte.lvl + 1
+FROM Employees e INNER JOIN empHierachyCte cte ON e.ReportsTo = cte.EmployeeID
+)
+
+SELECT FirstName, SUM(ReportsTo) FROM empHierachyCte
+WHERE FirstName != 'Andrew'
+GROUP BY FirstName
+
+--13. Display the customers and suppliers by city. The results should have the following columns
+SELECT s.City, s.CompanyName, cd.ContactName
+FROM Suppliers s LEFT JOIN (SELECT c.City, c.ContactName
+FROM Customers c) cd ON s.City = cd.City
+GROUP BY s.City, s.CompanyName, cd.ContactName
+
+--14. List all cities that have both Employees and Customers.
+SELECT e.City
+FROM Employees e INNER JOIN (SELECT c.City, c.ContactName
+FROM Customers c) cd ON e.City = cd.City
+GROUP BY e.City
+
+--15.List all cities that have Customers but no Employee.
+SELECT e.City
+FROM Customers e LEFT JOIN (SELECT c.City
+FROM Employees c) cd ON e.City = cd.City
+GROUP BY e.City
+
+--16. List all products and their total order quantities throughout all orders.
+SELECT pd.ProductName, SUM(od.Quantity) AS 'Total Order Quantities'
+FROM [Order Details] od LEFT JOIN (
+  SELECT p.ProductID, p.ProductName
+  FROM Products p
+) pd ON od.ProductID = pd.ProductID
+GROUP BY pd.ProductName
+
+--17. List all Customer Cities that have at least two customers.
+--a)
+SELECT c.City, cs.[Sum Num of Customers]
+FROM Customers c LEFT JOIN(SELECT cd.City, SUM(ch.[Number of Customers]) as 'Sum Num of Customers'
+FROM Customers cd LEFT JOIN (SELECT c.City,COUNT(*) AS 'Number of Customers'
+FROM Customers c
+GROUP BY c.City ) ch ON cd.City = ch.City
+GROUP BY cd.City) cs ON c.City = cs.City
+WHERE cs.[Sum Num of Customers] >= 2
+GROUP BY c.City, cs.[Sum Num of Customers]
+
+--b)
+SELECT c.City, Count(*) as 'Number of Customers'
+FROM Customers c 
+GROUP BY c.City
+UNION
+SELECT s.City, Count(*) as 'Number of Customers'
+FROM Customers s 
+GROUP BY s.City
+
+--18. List all Customer Cities that have ordered at least two different kinds of products.
+SELECT cc.City, SUM(od.ProductID)
+FROM [Order Details] od LEFT JOIN
+(SELECT o.CustomerID, o.OrderID, cd.City
+FROM Orders o LEFT JOIN (
+SELECT c.CustomerID, c.City
+FROM Customers c) cd ON o.CustomerID = cd.CustomerID) cc ON od.OrderID = cc.OrderID
+GROUP BY cc.City
+
+--19. List 5 most popular products, their average price, and the customer city that ordered most quantity of it.
+SELECT TOP 5 p.ProductName, AVG(p.UnitPrice) AS 'Average Price', MAX(odi.ShipCity) AS 'Customer City'
+FROM Products p LEFT JOIN
+(SELECT od.ProductID, oi.ShipCity
+FROM [Order Details] od LEFT JOIN
+(SELECT o.ShipCity, o.OrderID
+FROM Orders o) oi ON od.OrderID = oi.OrderID) odi ON p.ProductID = odi.ProductID
+GROUP BY p.ProductName
+
+--20. List one city, if exists, that is the city from where the employee sold most orders (not the product quantity) is, and also the city of most total quantity of products ordered from
+SELECT TOP 1 o.ShipCity
+FROM ORDERS o LEFT JOIN
+(SELECT MAX(odi.ShipCity) AS 'Products City'
+FROM Products p LEFT JOIN
+(SELECT od.ProductID, oi.ShipCity
+FROM [Order Details] od LEFT JOIN
+(SELECT o.ShipCity, o.OrderID
+FROM Orders o) oi ON od.OrderID = oi.OrderID) odi ON p.ProductID = odi.ProductID
+GROUP BY p.ProductName) pi ON o.ShipCity = pi.[Products City]
+GROUP BY o.ShipCity 
+
+--21. How do you remove the duplicates record of a table?
+--the UNION keyboard removes all duplicate records from a table
