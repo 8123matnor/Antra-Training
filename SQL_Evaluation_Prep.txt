@@ -1,0 +1,120 @@
+--Assignment 4: SQL Evaluation Prep
+--Lucia Fuentes
+
+--1. What is index; types of indices; pros and cons
+a lookup table that helps users be able to do a quick lookup of the rows that they are trying to find. 
+Types of indices: clustered, non-clustered, column store, filtered, hash, unique
+pros: it is an easy lookup for searching for records, it speeds up the SELECT statement, makes the records 
+have unique IDs.
+cons: they take additional space because they are an additional column and they can be slow on INSERT,
+UPDATE and DELETE (unless UPDATE if WHERE has an indeed field)
+
+2. What's the difference between Primary key and Unique constraint?
+Primary Key will by default create clusterd index, and unique key will create non-clustered index
+
+3. Tell me about check constraint
+the check constraint limits the value ranges that can be placed on a column. 
+Only certain values are allowed on each column
+
+4. Difference between temp table and table variable
+-temp tables life scope is the end of the query in which they were created. Table variables' life scope 
+is their batch. 
+-temp tables are used when there are more than 100 rows in table and temp variables when it is less
+-temp variables can be used in stored procedures or functions and temp tables cannot
+
+5. Difference between WHERE and HAVING
+WHERE cannot be used with aggregates and HAVING table can.
+
+6. Difference between RANK() and DenseRank() — value gap
+If there are two entries with the same value, rank will have them have the same index number and skip
+a value for the next entry. Dense rank will not do this, it will count up the index as normal 
+
+7. COUNT(*) vs. COUNT(colName)
+COUNT(*) counts all of the columns whereas COUNT(ColName) only counts a specific column
+
+8. What's the difference between left join and inner join? JOIN and Subquery, which one has a
+better performance, why?
+left join takes the values that are the same in both tables and the rest of the values from the left table. 
+Inner join only takes the values that are the same in both tables. 
+JOIN vs Subquery: Joins are faster because they are better optimized by the server but subqueries are easier to write.
+
+9. What is correlated subquery
+the inner query is dependent on the outer query. 
+
+10. What is a CTE, why do we need CTE?
+Common Table Expression. 
+Specifies a temporary named result set
+Improve readability and manageability of complex SQL Statements
+- Similar to VIEWs and even more to Derived Tables
+- Over time most of the CTEs will be used for this purpose
+it is important because it can call itself to become a recursive CTE. 
+
+11. What does SQL Profiler do?
+it is an interface that creates, manages traces and analyzes and replays the trace results
+
+12. What is SQL injection, how to avoid SQL injection?
+when a hacker tries to get into the SQL program by injecting some code that gives them information
+from the table or lets them delete or change the table. Avoid SQL injection by using stored procedures
+
+13. Difference between SP and user defined function? When to use SP when to use function?
+--usage: sp for DML statements, function for calculations
+--how to call: sp called by its name, function will be called in SQL query
+--output: sp may or maynot have output, but function must return some value
+--SP can call function but function can not call sp
+
+14. Criteria of Union and Union all? Difference between UNION and UNION ALL
+They are both used to combine multiple results sets vertically
+criteria: the number of columns and types must be the same and alias must be given in first SELECT statement
+--DIFFERENCE
+--1. UNION remove all duplicate records, but UNION ALL will not
+--2. UNION sort the first column ascendingly, but UNION ALL will not
+--3. UNION cannot be used in recursive cte, but UNION ALL can 
+
+15. Steps you take to improve SQL Queries
+simplify joins, use normalization in order to minimize redundancy
+
+16. concurrency problem in transaction
+this happens when two or more users are trying to access the same data or transaction. 
+This can lead to inconsistent results or invalid behavior because both users are trying to
+manipulate the data
+
+17. what is deadlock, how to prevent
+deadlocks happen when two processes want to access resources that are mutually being locked by 
+each other. It can continue forever if it is never stopped. It can be prevented by accessing resources in the same
+order, limiting usage of cursor, avoiding poorly optimized queries and designing more normalized databases.
+
+18. what is normalization, 1NF - BCNF, benefits using normalization
+normalization is organizing data to minimize redundancy (data duplicacy) and it ensures data consistency.
+--first normal form: 
+    --atomic values: One cell -> one value
+    --cannot have repeating groups, such as different columns for employees
+--second normal form: must obey first normal form + no partial dependency
+    --partial dependency: combination of two columns to come up with a key to access other tables
+--third normal form: meet requirement for second normal form + no trransitive dependency
+    --transitive dependency: remove columns that could be calculated based on other columns
+---BCNF: Boyce Codd Normal Form: stricter version of 3NF + functional dependency
+    --functional dependency: 
+
+19. what are the system defined databases?
+master, model, msdb, tempdb
+
+20. composite key
+a key that is made up of 2 or more different columns to uniquely identify a row.
+
+21. candidate key
+a key that uniquely identifies a row, can be made up of 1 or more different columns
+
+22. DDL vs. DML
+--DML trigger: Run when we try to modify data like DELETE, INSERT
+--DDL trigger: run when we try to implement ddl operations like CREAtE and ALERT
+
+23. ACID property
+properties that help ensure the database is good. 
+atomicity, consistency, isolation, and durability
+
+24. table scan vs. index scan
+table scans iterate throw every single row while index scan iterate through the specific
+index items. 
+
+25. Difference between Union and JOIN
+JOIN combines data into new columns, UNION combines data into new rows of the same column
